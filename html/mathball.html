@@ -32,6 +32,7 @@
       let running = true;
 
       let flow = 0.02;
+      let flow_increment = 0.01;
 
       let trench_width = 350;
       let trench_height = 420;
@@ -172,7 +173,7 @@
 		  operation.color = operation_fill_style(operation);
 
 		  bucket = 0;
-		  //flow *= 1.01;
+		  flow *= (1 + flow_increment);
 		  let ball = Bodies.circle(playground_width/2 + 4*ball_radius * (Math.random() - 0.5),
 					   -ball_radius * 2,
 					   ball_radius,
@@ -258,6 +259,41 @@
 
       Events.on(mouse_constraint, "mousedown", on_mouse_down);
 
+
+      let audio_context_class = window.AudioContext || window.webkitAudioContext;
+      let audio_context = new audio_context_class();
+      let sounds = {}
+
+      function load_sound(name) {
+	  let request = new XMLHttpRequest();
+	  let base_url = "sounds/";
+	  request.open('GET', base_url + name + ".ogg" , true);
+	  request.responseType = 'arraybuffer';
+
+	  request.onload = function() {
+	      audio_context.decodeAudioData(request.response, function(buffer) {
+		  sounds[name] = buffer;
+	      });
+	  }
+	  request.send();
+      }
+
+      load_sound("bounce");
+
+      function play_sound(name, volume) {
+	  buffer = sounds[name];
+	  if (buffer) {
+	      let source = audio_context.createBufferSource();
+	      source.buffer = buffer;
+	      let gain = audio_context.createGain();
+	      gain.gain.value = volume;
+	      //source.connect(audio_context.destination);
+	      source.connect(gain);
+	      gain.connect(audio_context.destination);
+	      source.start(audio_context.currentTime);
+	  }
+      }
+
       function on_collision(event) {
 
 	  let pairs = event.pairs
@@ -265,10 +301,15 @@
 	      pairs = [pairs]
 	  }
 
+	  let max_body_speed = 0;
+
 	  pairs.forEach(function(pair, _, _) {
 	      bodyA = pair.bodyA;
 	      bodyB = pair.bodyB;
 	      if (bodyA && bodyB) {
+		  if (bodyA.speed > max_body_speed) { max_body_speed = bodyA.speed }
+		  if (bodyB.speed > max_body_speed) { max_body_speed = bodyB.speed }
+
 		  if ((bodyA.is_lethal && bodyB.operation) ||
 		      (bodyB.is_lethal && bodyA.operation)) {
 		      console.log("Game Over!");
@@ -284,11 +325,16 @@
 		  }
 	      }
 	  });
+
+
+	  if (max_body_speed > 2) {
+	      let volume = max_body_speed / 20;
+	      if (volume > 1) { volume = 1 };
+	      console.log("playing sound, max_body_speed: " + max_body_speed + ", volume: " + volume + ", expected latency: " + audio_context.outputLatency);
+	      play_sound("bounce", volume * volume);
+	  }
       }
-
       Events.on(engine, "collisionStart", on_collision);
-
-
     </script>
   </body>
 </html>
