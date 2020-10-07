@@ -32,7 +32,7 @@
       let running = true;
 
       let flow = 0.02;
-      let flow_increment = 0.01;
+      let flow_increment = 0.002;
 
       let trench_width = 350;
       let trench_height = 420;
@@ -45,6 +45,16 @@
 
       let score_element = document.getElementById("score");
       let status_element = document.getElementById("status");
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const multiplicants = (urlParams.get('multiplicants') || "1,2,3,4,5,6,7,8,9,10").split(",");
+      const multipliers   = (urlParams.get('multipliers')   || "1,2,3,4,5,6,7,8,9,10").split(",");
+
+      console.log("multiplicants: " + multiplicants + ", multipliers: " + multipliers);
+      
+      function pick_random(array) {
+	  return array[Math.floor(Math.random() * array.length)];
+      }
 
       // module aliases
       let Engine = Matter.Engine,
@@ -129,8 +139,17 @@
       }
 
       function fill_waiting_operations() {
-	  let left  = 1 + Math.floor(10 * Math.random());
-	  let right = 1 + Math.floor(10 * Math.random());
+	  let left  = parseInt(pick_random(multiplicants));
+	  let right = parseInt(pick_random(multipliers));
+
+	  // console.log("left: " + left + ", right: " + right);
+	  if (Math.random() > 0.5) {
+
+	      let tmp = left;
+	      left = right;
+	      right = tmp;
+	      // console.log("left: " + left + ", right: " + right + " (swap)");
+	  }
 
 	  let text = left + "×" + right;
 	  let value = left * right;
