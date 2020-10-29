@@ -28,11 +28,16 @@
     <script src="js/matter.js"></script>
     <script>
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const multiplicants = (urlParams.get('multiplicants') || "1,2,3,4,5,6,7,8,9,10").split(",");
+      const multipliers   = (urlParams.get('multipliers')   || "1,2,3,4,5,6,7,8,9,10").split(",");
+
+      let flow = parseFloat(urlParams.get('flow') || 0.02);
+      let flow_increment = parseFloat(urlParams.get('flowIncrement') || 0.002);
+
       let score = 0;
       let running = true;
 
-      let flow = 0.02;
-      let flow_increment = 0.002;
 
       let trench_width = 350;
       let trench_height = 420;
@@ -46,12 +51,8 @@
       let score_element = document.getElementById("score");
       let status_element = document.getElementById("status");
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const multiplicants = (urlParams.get('multiplicants') || "1,2,3,4,5,6,7,8,9,10").split(",");
-      const multipliers   = (urlParams.get('multipliers')   || "1,2,3,4,5,6,7,8,9,10").split(",");
-
       console.log("multiplicants: " + multiplicants + ", multipliers: " + multipliers);
-      
+
       function pick_random(array) {
 	  return array[Math.floor(Math.random() * array.length)];
       }
@@ -211,6 +212,8 @@
 
 	  //score += 1;
 
+	  console.log("flow: " + flow);
+	  
 	  score_element.innerHTML = score;
 	  
       }
